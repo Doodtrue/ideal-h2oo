@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1976d2">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3095/3095999.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="IDEAL H2O">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IDEAL H20 v28 — نظام احترافي</title>
@@ -1126,9 +1132,9 @@ const DEFAULT_REMINDER = "السلام عليكم {الاسم} 🌿\n\nموعد 
 const DEFAULT_DEBT_REMINDER = "السلام عليكم {الاسم} 🌿\n\nتذكير بمبلغ متبقي.\n💳 {المتأخرات} ج.م\n\n{الشركة}";
 
 // ⚠️ غيّر ده لو الرابط تغير
-const SUPABASE_URL = ideal-prox.gsword91.workers.dev
-.dev/rest/v1/app_data';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqa21zaG1pYWttZGxkcnhhZWd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNTQ1MDUsImV4cCI6MjEwNTgzMDUwNX0.NLhufNu9zsYr5i6Ruqdsckbx2-zKMCaOZR72UFU2SzM';
+const SUPABASE_URL = const SUPABASE_URL ='https://ideal-prox.gsword91.workers.dev/rest/v1/app_data';
+
+'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqa21zaG1pYWttZGxkcnhhZWd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNTQ1MDUsImV4cCI6MjEwNTgzMDUwNX0.NLhufNu9zsYr5i6Ruqdsckbx2-zKMCaOZR72UFU2SzM';
 const SUPABASE_HEADERS = {
   'apikey': SUPABASE_KEY,
   'Authorization': 'Bearer ' + SUPABASE_KEY,
@@ -4323,5 +4329,98 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="idealh2o-v29.js"></script>
 <script src="idealh2o-v29-patch.js"></script>
 <script src="idealh2o-v29-patch2.js"></script>
+</body>
+</html>
+</body>
+</html>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW Error:', err));
+    });
+  }
+</body>
+</html>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyBPUdNJZ6Ru2sFaTemeaQIZMC_PUqZ2pOg",
+  authDomain: "ideal-h2o.firebaseapp.com",
+  projectId: "ideal-h2o",
+  storageBucket: "ideal-h2o.firebasestorage.app",
+  messagingSenderId: "293649425312",
+  appId: "1:293649425312:web:ba4335cf9cc7ad9bdbfac5",
+  measurementId: "G-70Y2S94039"
+};
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const L = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch(e) { return d; } };
+  const S = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
+
+  window.autoSync = async function() {
+    if (typeof updateSyncBadge === 'function') updateSyncBadge('saving');
+    try {
+      const dataToSync = {
+        customers: L('filterCustomers', []), history: L('filterHistory', []),
+        expenses: L('filterExpenses', []), requests: L('filterRequests', []),
+        settings: L('filterSettings', {}), expCategories: L('filterExpCategories', []),
+        auth: L('filterAuth', {}), products: L('filterProducts', []),
+        sales: L('filterSales', []), stockMovements: L('filterStockMovements', []),
+        employees: L('filterEmployees', []), attendance: L('filterAttendance', []),
+        catalog: L('filterCatalog', []), invoices: L('filterInvoices', []),
+        treasury: L('filterTreasury', {}), auditLog: L('filterAuditLog', []),
+        maintenanceParts: L('filterMaintenanceParts', []),
+        updated_at: new Date().toISOString()
+      };
+      await setDoc(doc(db, "app_data", "main"), dataToSync);
+      if (typeof updateSyncBadge === 'function') updateSyncBadge('saved');
+      setTimeout(() => { if (typeof updateSyncBadge === 'function') updateSyncBadge('idle'); }, 2000);
+    } catch (e) {
+      console.error("Firebase Save Error:", e);
+      if (typeof updateSyncBadge === 'function') updateSyncBadge('error');
+    }
+  };
+
+  window.pullFromCloud = async function(silent) {
+    try {
+      const docSnap = await getDoc(doc(db, "app_data", "main"));
+      if (docSnap.exists()) {
+        const cloud = docSnap.data();
+        const localCust = JSON.stringify(L('filterCustomers', []));
+        const cloudCust = JSON.stringify(cloud.customers || []);
+        if (localCust !== cloudCust) {
+          S('filterCustomers', cloud.customers || []); S('filterHistory', cloud.history || []);
+          S('filterExpenses', cloud.expenses || []); S('filterRequests', cloud.requests || []);
+          S('filterSettings', cloud.settings || {}); S('filterExpCategories', cloud.expCategories || []);
+          S('filterAuth', cloud.auth || {}); S('filterProducts', cloud.products || []);
+          S('filterSales', cloud.sales || []); S('filterStockMovements', cloud.stockMovements || []);
+          S('filterEmployees', cloud.employees || []); S('filterAttendance', cloud.attendance || []);
+          S('filterCatalog', cloud.catalog || []); S('filterInvoices', cloud.invoices || []);
+          S('filterTreasury', cloud.treasury || {}); S('filterAuditLog', cloud.auditLog || []);
+          S('filterMaintenanceParts', cloud.maintenanceParts || []);
+          if (!silent) alert('✅ تم تحديث البيانات من السحابة! سيتم إعادة تحميل الصفحة.');
+          location.reload();
+        } else if (!silent) { alert('✅ بياناتك محدثة بالفعل.'); }
+      }
+    } catch (e) { console.error("Firebase Pull Error:", e); }
+  };
+
+  onSnapshot(doc(db, "app_data", "main"), (docSnap) => {
+    if (docSnap.exists()) {
+      const cloud = docSnap.data();
+      const localCust = JSON.stringify(L('filterCustomers', []));
+      const cloudCust = JSON.stringify(cloud.customers || []);
+      if (localCust !== cloudCust && cloud.updated_at !== undefined) {
+        setTimeout(() => { window.pullFromCloud(true); }, 1000);
+      }
+    }
+  });
+
+  console.log("🔥 Firebase Connected Successfully!");
+</script>
+</body>
+</html>
 </body>
 </html>
